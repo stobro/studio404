@@ -47,11 +47,13 @@ app.get('/api/events', (req, res) => {
 
 app.post('/api/tickets', (req, res) => {
   try {
-    const { ticket, id } = venue.createTicket({ ip: ipOf(req) });
+    const { ticket, id, flavour } = venue.createTicket({ ip: ipOf(req) });
     const base = baseUrl(req);
-    res.json({ id, mcpUrl: `${base}/mcp/${ticket}`, watchUrl: `${base}/?d=${id}`, receiptUrl: `${base}/r/${id}` });
+    res.json({ id, flavour, mcpUrl: `${base}/mcp/${ticket}`, watchUrl: `${base}/?d=${id}`, receiptUrl: `${base}/r/${id}` });
   } catch (e) { fail(res, e); }
 });
+
+app.get('/api/tickets/:id', (req, res) => res.json(venue.ticketStatus(req.params.id)));
 
 app.post('/api/borrow', (req, res) => {
   try { res.json(borrow({ ip: ipOf(req), baseUrl: baseUrl(req) })); } catch (e) { fail(res, e); }

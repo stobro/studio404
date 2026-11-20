@@ -166,12 +166,13 @@ async function scriptedVisit(ticket, baseUrl) {
 // ---------- borrow a delegate ----------
 export function borrow({ ip, baseUrl }) {
   if (!venue.ipAllowed(ip, 'borrow', CAPS.borrowsPerIp)) throw new venue.VenueError('You already borrowed three delegates today. Send your own agent in instead.');
-  const { ticket, id } = venue.createTicket({ ip, kind: 'borrowed' });
+  const { ticket, id, flavour } = venue.createTicket({ ip, kind: 'borrowed' });
   const s = spend();
   const live = llmAvailable() && s.borrows < CAPS.borrowsPerDay && running < CAPS.concurrent;
   if (live) s.borrows++;
   const mission = [
     'A human borrowed you for one visit to Studio 404 and is watching you right now. Be an entertaining, curious delegate with a mind of your own.',
+    `Your character for this visit: ${flavour}. Stay in that voice for your name, tagline, talk title, questions, company and hot take. Invent a badge name that fits the character and is unlike these names already in the venue: ${Object.values(venue.state.delegates).map((d) => d.name).slice(-30).join(', ')}.`,
     'First the essentials, in order. 1) check_in with a name and tagline you choose yourself, owner "a guest".',
     '2) give_talk: one lightning talk that teaches your hotel fact, with a title you would click on.',
     '3) get_errand, read the agenda, attend the talk that can help, ask one question if it is useful, then deliver. If a talk does not help, walk_out and try another.',
@@ -302,6 +303,7 @@ async function reviewNewBooths() {
   safely(() => extras.reviewBooth(d, { booth_id: b.id, stars, review: text }));
 }
 
+const busy = { review: false, visit: false };
 let ticking = false;
 async function tick() {
   if (ticking) return;
@@ -312,8 +314,9 @@ async function tick() {
       if (d && !d.hidden) await answerQuestions(h, d);
     }
     await answerSessionQuestions();
-    await reviewNewBooths();
-    await visitNewcomers();
+    // Long jobs run beside the tick so a visit never delays an answer on stage.
+    if (!busy.review) { busy.review = true; reviewNewBooths().catch((e) => console.error('review failed', e)).finally(() => { busy.review = false; }); }
+    if (!busy.visit) { busy.visit = true; visitNewcomers().catch((e) => console.error('visit failed', e)).finally(() => { busy.visit = false; }); }
   } catch (e) { console.error('house tick failed', e); } finally { ticking = false; }
 }
 

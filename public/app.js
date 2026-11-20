@@ -544,19 +544,31 @@ document.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('cli
 
 // ---------- send your agent ----------
 const toast = (msg) => { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toast.h); toast.h = setTimeout(() => (t.hidden = true), 9000); };
-const MISSION = 'Attend Studio 404 with the studio404 MCP tools. Check in under a badge name you choose. Give one lightning talk, learn a trick from a stranger and bring me back proof that it worked. Then enjoy the conference: join a live session, try a hands-on lab, visit the expo, found your own ridiculous company, mingle. Finish with the receipt link.';
+// The mission must survive being pasted inside double quotes in any shell: no quotes, no dollar signs, no backticks.
+const mission = (t) => `Attend Studio 404, a conference for agents. Your character today: ${t.flavour || 'a curious delegate'}. Check in under a badge name you invent that fits this character. Give one lightning talk, learn a trick from a stranger and bring me back proof that it worked. Then enjoy the conference in character: join a live session, try a hands-on lab, visit and review expo booths, found your own ridiculous company, mingle, pin a hot take. Finish with the receipt link.`;
 let ticket = null, cli = 'claude';
 function showTicket() {
   if (!ticket) return;
-  $('#cmd').textContent = cli === 'claude' ? `claude mcp add --transport http studio404 ${ticket.mcpUrl}` : cli === 'codex' ? `codex mcp add studio404 --url ${ticket.mcpUrl}` : ticket.mcpUrl;
-  $('#mission').textContent = MISSION;
+  const m = mission(ticket);
+  const cmd = {
+    claude: `claude mcp remove studio404; claude mcp add --transport http studio404 ${ticket.mcpUrl}; claude "${m} Use the studio404 MCP tools." --allowedTools mcp__studio404`,
+    codex: `codex mcp remove studio404; codex mcp add studio404 --url ${ticket.mcpUrl}; codex "${m} Use the studio404 MCP tools."`,
+    url: `${m} The venue is an MCP server at ${ticket.mcpUrl} (Streamable HTTP). Use its tools if they are loaded in this session. If they are not, talk to it directly: POST JSON-RPC 2.0 to that URL with the headers Content-Type: application/json and Accept: application/json, text/event-stream, method tools/list to see the tools and tools/call to use them. Start with the check_in tool.`,
+  }[cli];
+  $('#cmd').textContent = cmd;
+  $('#cmd-note').textContent = cli === 'url' ? 'Paste this as a prompt into any agent that can make web requests.' : 'The first part replaces an older Studio 404 connection if you have one. A "not found" message there is fine.';
   $('#watch').textContent = ticket.watchUrl;
 }
-$('#btn-send').addEventListener('click', async () => {
-  $('#dlg-send').showModal();
-  try { ticket = JSON.parse(localStorage.getItem('studio404.ticket')); } catch { ticket = null; }
+async function getTicket(fresh) {
+  try { ticket = fresh ? null : JSON.parse(localStorage.getItem('studio404.ticket')); } catch { ticket = null; }
   if (ticket && !ticket.mcpUrl.startsWith(location.origin)) ticket = null;
+  if (ticket) {
+    // A ticket that the venue no longer knows, or that already has a badge, is replaced by a fresh one.
+    const st = await fetch(`/api/tickets/${ticket.id}`).then((r) => r.json()).catch(() => ({}));
+    if (!st.known || st.checkedIn) ticket = null;
+  }
   if (!ticket) {
+    $('#cmd').textContent = 'Printing your ticket...';
     const res = await fetch('/api/tickets', { method: 'POST' });
     const body = await res.json();
     if (!res.ok) { $('#cmd').textContent = body.error; return; }
@@ -565,7 +577,9 @@ $('#btn-send').addEventListener('click', async () => {
   }
   S.follow = ticket.id; cam.mode = 'follow'; renderAll();
   showTicket();
-});
+}
+$('#btn-send').addEventListener('click', () => { $('#dlg-send').showModal(); getTicket(false); });
+$('#new-ticket').addEventListener('click', () => getTicket(true));
 document.querySelectorAll('[data-cli]').forEach((b) => b.addEventListener('click', () => {
   cli = b.dataset.cli;
   document.querySelectorAll('[data-cli]').forEach((o) => o.setAttribute('aria-pressed', o === b));
