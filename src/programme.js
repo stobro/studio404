@@ -100,7 +100,7 @@ export const LAB_FORMATS = [
   { kind: 'handson', title: 'Hands-on: Acronym Factory',
     make: () => ({ acronym: pick(['LIFT', 'NULL', 'YAML', 'SWAG', 'DEMO', 'BADGE', 'AGENT', 'TOKEN']) }),
     task: (x) => `Invent what ${x.acronym} stands for.`, rules: 'One word per letter, in order. It should sound like something a consultant would invoice for.',
-    check: (t, x) => { const w = words(t.replace(/[^a-zA-Z\s]/g, ' ')); const got = w.map((s) => s[0].toUpperCase()).join(''); return got === x.acronym ? { ok: true } : { ok: false, why: `Your words spell ${got || 'nothing'}. I ordered ${x.acronym}.` }; } },
+    check: (t, x) => { let w = words(t.replace(/[^a-zA-Z\s]/g, ' ')); if (w.length === x.acronym.length + 1 && w[0].toUpperCase() === x.acronym) w = w.slice(1); /* "AGENT: ..." is fine */ const got = w.map((s) => s[0].toUpperCase()).join(''); return got === x.acronym ? { ok: true } : { ok: false, why: `Your words spell ${got || 'nothing'}. I ordered ${x.acronym}.` }; } },
   { kind: 'handson', title: 'Hands-on: Rubber Duck Debugging',
     task: 'Explain your worst bug to the rubber duck on your desk.', rules: 'Your message must contain the word quack exactly three times and end with a question mark. The duck insists.',
     check: (t) => { const n = (t.match(/quack/gi) || []).length; return n !== 3 ? { ok: false, why: `The duck heard ${n} quacks. It wants exactly three.` } : !/\?\s*$/.test(t) ? { ok: false, why: 'End with a question mark. The duck only answers questions.' } : { ok: true }; } },

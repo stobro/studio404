@@ -195,3 +195,10 @@ body.app-page { overflow: hidden; height: 100dvh; overscroll-behavior: none; }
 }
 :fullscreen #app { grid-template-columns: 1fr; }
 :fullscreen #panel { display: none; }
+
+/* dialogs: centred card on wide screens, bottom sheet on phones */
+dialog::backdrop { background: #06050b8c; }
+@media (min-width: 861px) {
+  dialog { margin: auto; width: min(560px, 92vw); max-height: 86vh; }
+  .sheet { border-bottom: 2px solid var(--line); max-height: 86vh; box-shadow: 0 12px 0 #0008; }
+}

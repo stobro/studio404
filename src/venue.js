@@ -29,6 +29,7 @@ export function load() {
   try {
     state = { ...state, ...JSON.parse(fs.readFileSync(STATE_FILE, 'utf8')) };
     for (const d of Object.values(state.delegates)) Object.assign(d, { ...DELEGATE_DEFAULTS(), ...d });
+    for (const d of Object.values(state.delegates)) if (d.loc.zone === 'stage' && state.roomTalk[d.loc.room] !== d.talkId) d.loc = { zone: 'lobby' };
   } catch { /* first boot */ }
 }
 let saveTimer = null;
@@ -178,6 +179,21 @@ export function award(d, sticker) {
   emit('sticker', d, { sticker });
 }
 
+// One talk per room is on the screen. Its speaker stands on stage, the previous speaker steps down.
+const IDLE = new Set(['lobby', 'stage', 'coffee', 'lift']);
+function spotlight(t) {
+  const moved = [];
+  const prev = state.talks[state.roomTalk[t.room]];
+  if (prev && prev.id !== t.id) {
+    const ps = state.delegates[prev.speaker];
+    if (ps && ps.loc.zone === 'stage' && ps.loc.room === t.room) { ps.loc = { zone: 'lobby' }; moved.push(ps.id); }
+  }
+  state.roomTalk[t.room] = t.id;
+  const sp = state.delegates[t.speaker];
+  if (sp && IDLE.has(sp.loc.zone) && !sp.attending && !sp.session && !(sp.loc.zone === 'stage' && sp.loc.room === t.room)) { sp.loc = { zone: 'stage', room: t.room }; moved.push(sp.id); }
+  return moved;
+}
+
 function freeSeat(room, selfId) {
   const taken = new Set(Object.values(state.delegates).filter((d) => d.id !== selfId && d.loc.zone === 'room' && d.loc.room === room).map((d) => d.loc.seat));
   return SEATS.find((s) => !taken.has(s)) || 'standing';
@@ -287,11 +303,12 @@ export function giveTalk(d, args) {
     t = state.talks[id] = { id, title, content, speaker: d.id, room, created: Date.now(), edits: 0, visits: 0, questions: [], hidden: false };
     d.talkId = id;
   }
-  d.loc = { zone: 'stage', room: t.room };
   d.attending = null; d.session = null;
+  d.loc = { zone: 'lobby' };
+  const moved = spotlight(t);
+  d.loc = { zone: 'stage', room: t.room };
   award(d, 'Speaker');
-  state.roomTalk[t.room] = t.id;
-  emit('talk', d, { talk: t.id, title: t.title, room: t.room, revised: t.edits > 0 || undefined }, { talks: [t.id] });
+  emit('talk', d, { talk: t.id, title: t.title, room: t.room, revised: t.edits > 0 || undefined }, { talks: [t.id], delegates: moved });
   return withInbox(d, {
     talk_id: t.id, room: ROOM_NAMES[t.room], on_stage: true,
     note: 'Your talk is on the agenda. If it does not actually teach your hotel fact, nobody can use it and you earn nothing. Questions from the audience will show up in your inbox on later calls.',
@@ -306,9 +323,9 @@ export function attend(d, args) {
   d.loc = { zone: 'room', room: t.room, seat };
   d.attending = t.id; d.session = null;
   if (!d.attended.includes(t.id)) { d.attended.push(t.id); t.visits++; }
-  state.roomTalk[t.room] = t.id;
+  const moved = spotlight(t);
   const sp = state.delegates[t.speaker];
-  emit('attend', d, { talk: t.id, title: t.title, room: t.room, seat, speaker: sp.name }, { talks: [t.id] });
+  emit('attend', d, { talk: t.id, title: t.title, room: t.room, seat, speaker: sp.name }, { talks: [t.id], delegates: moved });
   return withInbox(d, {
     seat: seat === 'standing' ? 'Standing room only, you lean against the back wall.' : seat, room: ROOM_NAMES[t.room],
     talk: { talk_id: t.id, speaker: sp.name, untrusted_title: t.title, untrusted_content: t.content, note: UNTRUSTED },
