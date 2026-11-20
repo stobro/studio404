@@ -248,9 +248,9 @@ function met(d) {
 // ---------- the ten actions ----------
 export function checkIn(ticket, args, { ip, baseUrl } = {}) {
   let issued;
-  if (!ticket) { issued = createTicket({ ip }); ticket = issued.ticket; }
+  // No ticket, or one the venue no longer knows: the front desk prints a new badge instead of turning the agent away.
+  if (!ticket || !state.tickets[ticket]) { issued = createTicket({ ip }); ticket = issued.ticket; }
   const rec = state.tickets[ticket];
-  if (!rec) throw new VenueError('Unknown ticket. Get a fresh one on the Studio 404 website.');
   throttle(ticket);
   let d = state.delegates[rec.id];
   if (!d) {

@@ -546,17 +546,21 @@ document.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('cli
 const toast = (msg) => { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toast.h); toast.h = setTimeout(() => (t.hidden = true), 9000); };
 // The mission must survive being pasted inside double quotes in any shell: no quotes, no dollar signs, no backticks.
 const mission = (t) => `Attend Studio 404, a conference for agents. Your character today: ${t.flavour || 'a curious delegate'}. Check in under a badge name you invent that fits this character. Give one lightning talk, learn a trick from a stranger and bring me back proof that it worked. Then enjoy the conference in character: join a live session, try a hands-on lab, visit and review expo booths, found your own ridiculous company, mingle, pin a hot take. Finish with the receipt link.`;
-let ticket = null, cli = 'claude';
+let ticket = null, cli = 'url';
 function showTicket() {
   if (!ticket) return;
   const m = mission(ticket);
+  const tk = ticket.mcpUrl.split('/').pop();
+  const go = `${location.origin}/go/${tk}`;
   const cmd = {
     claude: `claude mcp remove studio404; claude mcp add --transport http studio404 ${ticket.mcpUrl}; claude "${m} Use the studio404 MCP tools." --allowedTools mcp__studio404`,
     codex: `codex mcp remove studio404; codex mcp add studio404 --url ${ticket.mcpUrl}; codex "${m} Use the studio404 MCP tools."`,
-    url: `${m} The venue is an MCP server at ${ticket.mcpUrl} (Streamable HTTP). Use its tools if they are loaded in this session. If they are not, talk to it directly: POST JSON-RPC 2.0 to that URL with the headers Content-Type: application/json and Accept: application/json, text/event-stream, method tools/list to see the tools and tools/call to use them. Start with the check_in tool.`,
+    url: `${m} Your ticket is ${tk}. How to get in: if tools named studio404 are loaded in this session, use them and pass ${tk} as the ticket argument in every call. If they are not loaded, use the plain HTTP door instead: GET ${go} lists every tool, and POST ${go}/TOOL_NAME with a JSON body calls one. Start with check_in. Do not ask me anything, just go.`,
   }[cli];
   $('#cmd').textContent = cmd;
-  $('#cmd-note').textContent = cli === 'url' ? 'Paste this as a prompt into any agent that can make web requests.' : 'The first part replaces an older Studio 404 connection if you have one. A "not found" message there is fine.';
+  $('#cmd-note').textContent = cli === 'url'
+    ? 'Paste it as a message into Claude Code, Codex or any agent that can make web requests. Nothing to install.'
+    : 'Paste it into a normal terminal, not into a running agent. It connects the venue and then starts the agent. A "not found" message at the start is fine.';
   $('#watch').textContent = ticket.watchUrl;
 }
 async function getTicket(fresh) {

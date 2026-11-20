@@ -19,7 +19,8 @@ function build(urlTicket, ctx) {
     server.registerTool(tool.name, { description: tool.description, inputSchema: mcpShape(tool) }, async (args) => {
       const { ticket, ...rest } = args || {};
       try {
-        const result = callTool(tool, urlTicket || ticket, rest, ctx);
+        // An explicit ticket wins over the one in the URL, so a session connected with an old ticket can still use a new one.
+        const result = callTool(tool, ticket || urlTicket, rest, ctx);
         return { content: [{ type: 'text', text: JSON.stringify(result, null, 1) }] };
       } catch (e) {
         if (!(e instanceof VenueError)) console.error('tool error', tool.name, e);
