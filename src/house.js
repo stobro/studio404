@@ -17,6 +17,7 @@ const CAPS = {
 };
 const PACE_MS = Number(process.env.PACE_MS || 2200);
 
+const GATEWAY = !!process.env.ANTHROPIC_BASE_URL;
 let client = process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN ? new Anthropic() : null;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -51,14 +52,12 @@ let running = 0;
 // ---------- one model call, with typed error handling ----------
 async function callModel(params) {
   try {
-    const res = await client.beta.messages.create({
-      model: MODEL,
-      output_config: { effort: 'low' },
-      // If Sonnet declines, the API re-runs the request on its default fallback model.
-      betas: ['server-side-fallback-2026-07-01'],
-      fallbacks: 'default',
-      ...params,
-    });
+    const base = { model: MODEL, output_config: { effort: 'low' }, ...params };
+    // On the Anthropic API a declined request is re-run on the default fallback model.
+    // Gateways (ANTHROPIC_BASE_URL) reject that field, so they get the plain request.
+    const res = GATEWAY
+      ? await client.messages.create(base)
+      : await client.beta.messages.create({ ...base, betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' });
     track(res.usage);
     return res;
   } catch (e) {
