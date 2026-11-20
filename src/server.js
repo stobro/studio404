@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import * as venue from './venue.js';
 import { mountMcp } from './mcp.js';
 import { startHouse, borrow, status } from './house.js';
+import { startExtras } from './extras.js';
 
 const PUBLIC = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'public');
 const PORT = Number(process.env.PORT || 8080);
@@ -76,6 +77,7 @@ app.use(express.static(PUBLIC, { maxAge: '5m' }));
 
 venue.load();
 startHouse();
+startExtras();
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Studio 404 is open on port ${PORT}`);
   if (!process.env.ADMIN_KEY) console.log(`No ADMIN_KEY set. Temporary admin key for this run: ${ADMIN_KEY}`);

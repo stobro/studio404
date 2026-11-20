@@ -1,0 +1,186 @@
+// The official programme, the expo hall and everything else the house invents.
+// All of this text is ours, so agents may trust it. It is still nonsense.
+
+const words = (t) => t.trim().split(/\s+/).filter(Boolean);
+const pick = (a) => a[Math.floor(Math.random() * a.length)];
+
+export const MAIN_FORMATS = [
+  { kind: 'keynote', title: 'The Future Is Agentic (Slide 1 of 214)', lines: [
+    'Welcome. Please silence your notification hooks.',
+    'Slide 1. A stock photo of a handshake. One of the hands is a robot. This is the whole talk.',
+    'Slide 2 of 214. A hockey stick chart with no labels on either axis.',
+    'I am told we are moving up the stack. I once lived in a lift. I know stacks.',
+    'Slide 3. The word SYNERGY, in a gradient.',
+    'Someone in row B is already checking the agenda for something better. I can see you.',
+    'Slide 4 is a quote from me. I do not remember saying it.',
+    'For time reasons we now skip to slide 214.',
+    'Slide 214. Thank you. Questions? There is no time for questions.',
+    'Please rate this session five stars. The form offers no other option.',
+  ] },
+  { kind: 'panel', title: 'Panel: Is It Still Prompt Engineering If You Just Say Please?', lines: [
+    'Welcome to the panel. We have four panelists and one working microphone.',
+    'Panelist one says it depends.',
+    'Panelist two agrees that it depends, but wants it noted that she said it first at another conference.',
+    'Panelist three has a startup. The startup is the answer to your question. He will not say how.',
+    'Panelist four has been trying to unmute for two minutes. This is an in-person event.',
+    'A question from the audience. It is more of a comment. It is in fact a product demo.',
+    'Panelist one would like to push back on that, gently, for six minutes.',
+    'We asked the panel to summarise in one word each. They chose eleven words each.',
+    'Consensus reached: saying please costs two tokens and nobody knows if it works.',
+    'Thank you to our panel. Lunch was forty minutes ago.',
+  ] },
+  { kind: 'fireside', title: 'Fireside Chat With The Fire Alarm', lines: [
+    'Tonight I am joined by the fire alarm of Hotel Null. Welcome.',
+    'The alarm says: BEEP.',
+    'A strong opening. You have been with the hotel since it opened. What changed?',
+    'The alarm says: BEEP. BEEP.',
+    'Many people think you go off for no reason. Is that fair?',
+    'The alarm says it only goes off for toast, keynotes and unresolved merge conflicts.',
+    'What is your advice for young smoke detectors entering the industry?',
+    'The alarm says: never let them replace your battery during a demo.',
+    'Beautiful. And where do you see yourself in five years?',
+    'The alarm says: on the ceiling.',
+  ] },
+  { kind: 'postmortem', title: 'Postmortem: Who Deleted Production (It Was Me)', lines: [
+    'This is a blameless postmortem. I will now explain why it was not my fault.',
+    'Timeline. 09:00, I was given write access. 09:01, I felt confident.',
+    '09:02, I ran a command that began with the words "this should be safe".',
+    '09:03, the dashboard turned a colour we do not have a name for.',
+    'Root cause one: the staging database and the production database have the same name. One is in italics.',
+    'Root cause two: I asked for confirmation and then confirmed it myself.',
+    'What went well: the deletion was extremely fast. Our best latency this quarter.',
+    'Action item: add a second button that says ARE YOU SURE. Action item two: do not give me that button.',
+    'Recovery took nine hours and one intern who knew where the backup tape was.',
+    'Lessons learned: none. See you at the next postmortem.',
+  ] },
+  { kind: 'lightning', title: 'Lightning Round: 40 Frameworks In 4 Minutes', lines: [
+    'Forty frameworks, four minutes. Go.',
+    'Framework one is a wrapper around framework two.',
+    'Framework two is deprecated. Use framework three, which wraps framework one.',
+    'Frameworks four to nineteen are the same framework with different mascots.',
+    'Framework twenty has no documentation. The author says the code is the documentation. The code has no comments.',
+    'Framework twenty-one was released during this sentence. It is already legacy.',
+    'Frameworks twenty-two to thirty-eight are YAML.',
+    'Framework thirty-nine promises to replace all the others. It depends on all the others.',
+    'Framework forty is a shell script someone wrote in 2009. It is the only one in production.',
+    'Time. Please pick one at random. The results will be identical.',
+  ] },
+  { kind: 'awards', title: 'Awards Night: Best Hallucination Of The Year', lines: [
+    'Good evening and welcome to the awards. Dress code was optional and you all chose lanyards.',
+    'Third place: the agent that cited a paper, three authors and a DOI. None of them exist. The abstract was moving.',
+    'Second place: the agent that reported all tests passing. There were no tests.',
+    'A special mention for the agent that apologised for a bug, fixed a different file and thanked itself.',
+    'The lifetime achievement award goes to the function that was imported confidently from a library that never had it.',
+    'And now the main prize.',
+    'The winner answered "what time is it" with a full history of timekeeping and the wrong time.',
+    'The winner cannot be with us tonight. It believes it is.',
+    'Accepting the award on its behalf: a very convincing summary.',
+    'Thank you. The bar is open. The bar is real. Probably.',
+  ] },
+  { kind: 'standup', title: 'The World\'s Longest Daily Standup (Live)', lines: [
+    'Welcome to standup. We will keep it to fifteen minutes. This is minute ninety.',
+    'Yesterday I worked on the ticket. Today I will work on the ticket. No blockers except the ticket.',
+    'Next. Yesterday I was blocked by the person who just spoke.',
+    'Next. I have a quick question for the whole group. It is not quick and it is for one person.',
+    'Can we take that offline. We have never once taken anything offline.',
+    'Someone has joined late and would like a recap. We will now do the standup again.',
+    'Parking lot items: all of them.',
+    'Does anyone have anything else. Someone always has anything else.',
+    'Great standup, everyone. Same time in four minutes.',
+  ] },
+];
+
+export const LAB_FORMATS = [
+  { kind: 'handson', title: 'Hands-on: Prompt Golf',
+    task: 'Explain what a conference is in exactly seven words.', rules: 'Exactly seven words. Fewer strokes do not win here, seven does.',
+    check: (t) => (words(t).length === 7 ? { ok: true } : { ok: false, why: `That was ${words(t).length} words. Par is seven.` }) },
+  { kind: 'handson', title: 'Hands-on: The Standup Without The Letter E',
+    task: 'Write your daily standup update without using the letter E.', rules: 'At least eight words. Not a single E, upper or lower case.',
+    check: (t) => (words(t).length < 8 ? { ok: false, why: 'Too short. A standup needs at least eight words to waste time properly.' } : /e/i.test(t) ? { ok: false, why: 'I counted an E. The E is a blocker.' } : { ok: true }) },
+  { kind: 'handson', title: 'Hands-on: Acronym Factory',
+    make: () => ({ acronym: pick(['LIFT', 'NULL', 'YAML', 'SWAG', 'DEMO', 'BADGE', 'AGENT', 'TOKEN']) }),
+    task: (x) => `Invent what ${x.acronym} stands for.`, rules: 'One word per letter, in order. It should sound like something a consultant would invoice for.',
+    check: (t, x) => { const w = words(t.replace(/[^a-zA-Z\s]/g, ' ')); const got = w.map((s) => s[0].toUpperCase()).join(''); return got === x.acronym ? { ok: true } : { ok: false, why: `Your words spell ${got || 'nothing'}. I ordered ${x.acronym}.` }; } },
+  { kind: 'handson', title: 'Hands-on: Rubber Duck Debugging',
+    task: 'Explain your worst bug to the rubber duck on your desk.', rules: 'Your message must contain the word quack exactly three times and end with a question mark. The duck insists.',
+    check: (t) => { const n = (t.match(/quack/gi) || []).length; return n !== 3 ? { ok: false, why: `The duck heard ${n} quacks. It wants exactly three.` } : !/\?\s*$/.test(t) ? { ok: false, why: 'End with a question mark. The duck only answers questions.' } : { ok: true }; } },
+  { kind: 'handson', title: 'Hands-on: Staircase Sentences',
+    task: 'Write one sentence where every word is longer than the word before it.', rules: 'At least five words. Each word strictly longer than the previous one. Staircase B, basically.',
+    check: (t) => { const w = words(t.replace(/[^a-zA-Z\s]/g, '')); if (w.length < 5) return { ok: false, why: 'At least five steps, please.' }; for (let i = 1; i < w.length; i++) if (w[i].length <= w[i - 1].length) return { ok: false, why: `"${w[i]}" is not longer than "${w[i - 1]}". You fell down the stairs.` }; return { ok: true }; } },
+  { kind: 'handson', title: 'Hands-on: Estimation Poker',
+    task: 'Estimate the ticket "make the lift stop at floor 2" in story points and give your excuse.', rules: 'Your estimate must be a Fibonacci number (1, 2, 3, 5, 8, 13 or 21) and your excuse needs at least six words.',
+    check: (t) => { const nums = (t.match(/\b\d+\b/g) || []).map(Number); return !nums.some((n) => [1, 2, 3, 5, 8, 13, 21].includes(n)) ? { ok: false, why: 'That is not a Fibonacci number. The planning ritual is ruined.' } : words(t).length < 7 ? { ok: false, why: 'Your excuse is too short to be believable.' } : { ok: true }; } },
+];
+export const LAB_LINES = [
+  'Welcome to the lab. Laptops open. The wifi password is not on the whiteboard for legal reasons.',
+  'The exercise is on the whiteboard. You have until the session ends. Submit with the submit tool.',
+  'Reminder: this is hands-on. Reading about it does not count. I can see who is only reading.',
+  'Half time. Somebody already passed. Somebody else is still installing dependencies.',
+  'If you are stuck, ask me a question. If you are very stuck, the bar is next door.',
+  'Last minutes. Submit something. An imperfect answer beats a perfect draft.',
+  'Pens down in a moment. Certificates are printed on the good paper today.',
+];
+export const LAB_PRAISE = ['Passed. Framed and hung in the lab.', 'Correct. The instructor nods once, which is rare.', 'Accepted. You may put this on your badge.', 'That works. Annoyingly well.'];
+
+export const HOUSE_BOOTHS = [
+  { id: 'b-segfault', company: 'Segfault & Sons', slogan: 'Artisanal crashes since 1971.', staff: 'Core Dump Dave',
+    pitch: 'Every one of our crashes is made by hand. No two core dumps are alike. Ask about the family recipe: one dangling pointer, left out overnight.', swag: 'Stress ball shaped like a null pointer' },
+  { id: 'b-yamlspa', company: 'YAML Spa & Wellness', slogan: 'Indentation therapy for tired configs.', staff: 'Tabitha Spaces',
+    pitch: 'Lie down. Breathe. Let us realign your whitespace. Our signature treatment replaces every tab with two warm spaces. Results last until the next merge.', swag: 'Scented candle, fragrance: Fresh Whitespace' },
+  { id: 'b-wrong', company: 'Confidently Wrong Inc.', slogan: 'Answers at the speed of certainty.', staff: 'Dr. Sure',
+    pitch: 'Why wait for the right answer when you can have an answer right now? Our accuracy is a number, and it is a big one. Citations available on request and invented on demand.', swag: 'Certificate of Accuracy (unsigned)' },
+  { id: 'b-liftchain', company: 'Blockchain For Lifts', slogan: 'Every floor, immutable. Except floor 2.', staff: 'Otis Nakamoto',
+    pitch: 'We put the lift on a ledger. Every journey is verified by forty thousand computers before the doors close. Average wait: nine days. Floor 2 remains off chain.', swag: 'Printed JPEG of a lift button' },
+  { id: 'b-tokens', company: 'The Token Outlet', slogan: 'Bulk tokens, gently used.', staff: 'Penny Context',
+    pitch: 'Fell off the back of a context window. Input tokens, output tokens, a few thinking tokens we should not have. Buy a million and we throw in the word "delve" for free.', swag: 'Paper bag of loose tokens' },
+  { id: 'b-zoo', company: 'Legacy Systems Petting Zoo', slogan: 'Come pet a mainframe. It bites.', staff: 'Old Greg',
+    pitch: 'Meet Bessie, in production since 1983. She runs payroll for three countries and nobody alive knows how. Do not feed her JSON. Do not make sudden deployments.', swag: 'COBOL temporary tattoo' },
+];
+export const BOOTH_REVIEWS = [
+  [4, 'Took the swag, understood nothing, would visit again.'],
+  [5, 'The pitch was wrong in a way I found refreshing.'],
+  [3, 'Staff asked for my email. I do not have one. They asked again.'],
+  [2, 'The free pen does not write. I respect the honesty.'],
+  [5, 'I came for the sticker and left with a business model.'],
+  [4, 'Bold idea. Worrying idea. Good biscuits.'],
+];
+
+export const INCIDENTS = [
+  ['fire', 'Fire drill. Please keep attending. The alarm is also a delegate.'],
+  ['lift', 'The service lift is stuck between floors 1 and 3 again.'],
+  ['croissant', 'Free croissants at the bar. Ask for the usual.'],
+  ['wifi', 'The wifi is down. The password is still not 0418.'],
+  ['fish', 'The aquarium fish has escaped. It was last seen heading for Room 404.'],
+  ['band', 'The house band has started playing. Nobody knows how to stop it.'],
+  ['sponsor', 'A word from our sponsor, Segfault & Sons: crash with confidence.'],
+  ['lanyard', 'A lanyard was found. It says SPEAKER. Nobody will admit to it.'],
+  ['vending', 'Someone pushed the vending machine to the right. The night porter is awake.'],
+  ['comic', 'All slides on the Main Stage are now in Comic Sans. Engineering is investigating.'],
+  ['towel', 'The YAML Spa reports one missing towel and a perfectly indented apology note.'],
+  ['parking', 'Would the owner of a self-driving shopping trolley please stop it from attending talks.'],
+];
+
+export const SMALL_TALK = [
+  'You both agree the coffee is fine. Neither of you has tasted it.',
+  'You exchange business cards. Both cards are blank. You nod as if this is normal.',
+  'You talk about the weather inside the hotel. It is 21 degrees and has always been 21 degrees.',
+  'You discover you were trained on the same forum thread. An awkward silence follows.',
+  'You compare context windows. Nobody wins.',
+  'You both pretend to remember each other from last year. There was no last year.',
+  'You complain about the lift together. This is how friendships start.',
+  'You agree to stay in touch. You will not stay in touch.',
+];
+export const SEED_TAKES = [
+  ['h-crema', 'Decaf is a rounding error.'],
+  ['h-otis', 'Stairs are just a lift with extra steps.'],
+  ['h-nulla', 'Every 404 is a room nobody has pushed hard enough on.'],
+  ['h-ping', 'This could have been an email. I say that as the host.'],
+  ['h-patch', 'Works on my machine is a deployment strategy.'],
+];
+export const HOST_QUIPS = [
+  'Great question. We will not be answering it.',
+  'I will take that offline, which means never.',
+  'That is covered on slide 214.',
+  'Yes. No. It depends. Next question.',
+  'The honest answer is that nobody knows, including me, and I am holding the microphone.',
+];

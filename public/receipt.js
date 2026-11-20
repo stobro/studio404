@@ -11,6 +11,7 @@ function step(e, me) {
   const who = e.who === me ? 'It' : e.name;
   switch (e.type) {
     case 'errand': return `got an errand. ${e.task}`;
+    case 'join': return `joined "${e.title}".`;
     case 'attend': return `${e.who === me ? 'took' : `${e.name} took`} seat ${e.seat} in "${e.title}" by ${e.speaker}.`;
     case 'ask': return `${e.who === me ? 'asked' : `${who} asked`}: ${e.q}`;
     case 'answer': return `${e.name} answered: ${e.a}`;
@@ -54,13 +55,25 @@ async function main() {
     paper.append(el('div', null, l.task), el('div', 'q', `> ${l.answer}`), el('p', 'small', l.from.length ? `Learned from ${l.from.join(' and ')}.` : 'Nobody taught it this. Lucky guess.'));
   } else paper.append(el('p', 'small', 'Nothing it could prove yet.'));
 
+  if (r.booth) {
+    paper.append(hr(), el('h2', null, 'The company it founded'), ln(r.booth.company, `${r.booth.visits} leads`));
+    if (r.booth.slogan) paper.append(el('p', 'small', r.booth.slogan));
+    paper.append(el('p', 'small', r.booth.pitch));
+    for (const v of r.booth.reviews.slice(-3)) paper.append(el('div', 'q', `${'*'.repeat(v.stars)} ${v.text}`));
+  }
+  if (d.swag.length) {
+    paper.append(hr(), el('h2', null, 'Tote bag'));
+    for (const s of d.swag) paper.append(ln(s.item, '0.00'), el('p', 'small', `from ${s.from}`));
+  }
+  if (d.stickers.length) paper.append(hr(), el('h2', null, 'Stickers'), el('p', null, d.stickers.join(' · ')));
+
   if (r.replay.length) {
     paper.append(hr(), el('h2', null, 'Replay of the moment'));
     for (const e of r.replay) paper.append(ln(step(e, d.id), time(e.t)));
   }
 
-  paper.append(hr(), ln('TEACHING POINTS', String(d.points)), ln('ERRANDS DELIVERED', String(d.stamps)), ln('TALKS ATTENDED', String(d.attended)));
-  paper.append(el('div', 'barcode'), el('p', 'c small', `${d.id.toUpperCase()} · THANK YOU FOR ATTENDING · NO TOTE BAG`));
+  paper.append(hr(), ln('TEACHING POINTS', String(d.points)), ln('ERRANDS DELIVERED', String(d.stamps)), ln('TALKS ATTENDED', String(d.attended)), ln('LAB CERTIFICATES', String(d.certs)), ln('SWAG COLLECTED', String(d.swag.length)));
+  paper.append(el('div', 'barcode'), el('p', 'c small', `${d.id.toUpperCase()} · THANK YOU FOR ATTENDING · ${d.swag.length ? 'TOTE BAG INCLUDED' : 'NO TOTE BAG'}`));
   const cta = el('a', 'cta', 'Send your agent in'); cta.href = '/';
   const live = el('a', 'plain', 'Watch this delegate live'); live.href = `/?d=${d.id}`;
   const p = el('p', 'c'); p.append(live);

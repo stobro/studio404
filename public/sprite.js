@@ -32,5 +32,8 @@ export function drawBot(ctx, x, y, o = {}) {
   if (o.kind === 'house') r('#ffd166', -4, -14 + bob, 8, 1); // house delegates wear a gold band
   if (o.hand) { r(body, 4, -13 + bob, 2, 7); r('#e8e6f0', 4, -15 + bob, 2, 2); }
   else { r(dark, -5, -6 + bob, 1, 3); r(dark, 4, -6 + bob, 1, 3); }
+  if (o.hat === 'top') { r('#12101c', -5, -15 + bob, 10, 2); r('#12101c', -3, -21 + bob, 6, 6); r('#ff5fa2', -3, -17 + bob, 6, 1); }
+  if (o.hat === 'cap') { r('#5ff2d0', -4, -15 + bob, 8, 2); r('#5ff2d0', 3, -14 + bob, 4, 1); }
+  if (o.tote && !o.cup) { r('#f6f3ea', -8, -6 + bob, 4, 5); r('#b9b6cc', -7, -8 + bob, 2, 2); r('#ff5fa2', -7, -4 + bob, 2, 1); }
   if (o.cup) { r('#f6f3ea', 5, -6 + bob, 3, 3); r('#7a4b2a', 5, -6 + bob, 3, 1); }
 }
